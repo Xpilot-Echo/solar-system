@@ -72,7 +72,7 @@ async function start(){
  const earth=data.bodies.find(b=>b.name==='Earth');$('#verification-rows').innerHTML=bodies.map(b=>`<tr><td>${b.name}</td><td>${(b.radiusKm/earth.radiusKm).toFixed(6)}</td><td>${b.elements?(b.elements.a/earth.elements.a).toFixed(6):'—'}</td><td>${b.elements?b.elements.a.toFixed(6):'—'}</td><td>${b.elements?b.elements.e.toFixed(6):'—'}</td><td>${b.elements?b.elements.i.toFixed(6):'—'}</td></tr>`).join('');$('#verification-status').textContent=audit.passed?'Numerical verification · passed':'Numerical verification · attention';$('#verification-summary').textContent=`${audit.pairCount} pairwise diameter ratios and ${audit.orbitPairCount} pairwise semi-major-axis ratios verified. Element-derived positions agree with independent Horizons vectors within ${audit.maxPositionErrorKm.toExponential(2)} km. Both modes retain identical body centers and orbit vertices.`;
  let down=null;renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY]});renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const p=new THREE.Vector2(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,renderCamera);const hits=ray.intersectObjects(nodes.filter(n=>n.mesh.visible).map(n=>n.mesh));if(hits.length)focus(nodes.find(n=>n.mesh===hits[0].object));down=null;});
  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
- const v=new THREE.Vector3(),view=new THREE.Vector3();const placed=[];
+ const v=new THREE.Vector3(),view=new THREE.Vector3();
  function frame(now){requestAnimationFrame(frame);const dt=lastTime===null||document.hidden?0:Math.max(0,(now-lastTime)/1000);lastTime=now;
   if(playing){elapsedDays+=dt*daysPerSecond;moveBodies();}
   const date=new Date(epochMs+elapsedDays*86400000),readout=dateFormat.format(date).toUpperCase()+' · '+date.toISOString().slice(11,16)+' TDB';
@@ -83,8 +83,7 @@ async function start(){
   // Floating origin: all physical centers remain double precision in AU;
   // subtract the camera target before converting positions to GPU floats.
   renderCamera.copy(camera);renderCamera.position.sub(controls.target);renderCamera.updateMatrixWorld();orbitGroup.position.copy(controls.target).negate();
-  placed.length=0;const ordered=[...nodes].sort((a,b)=>Number(b===selected)-Number(a===selected));
-  for(const n of ordered){n.mesh.position.copy(n.pos).sub(controls.target);view.copy(n.mesh.position).applyMatrix4(renderCamera.matrixWorldInverse);n.displayRadius=displayRadius(n.radius,-view.z,innerHeight,camera.fov,visible&&n.b.name!=='Sun');n.mesh.scale.setScalar(n.displayRadius);v.copy(n.mesh.position).project(renderCamera);
+  for(const n of nodes){n.mesh.position.copy(n.pos).sub(controls.target);view.copy(n.mesh.position).applyMatrix4(renderCamera.matrixWorldInverse);n.displayRadius=displayRadius(n.radius,-view.z,innerHeight,camera.fov,visible&&n.b.name!=='Sun');n.mesh.scale.setScalar(n.displayRadius);v.copy(n.mesh.position).project(renderCamera);
    const x=(v.x+1)*innerWidth/2,y=(1-v.y)*innerHeight/2;
    const inViewport=view.z<0&&v.z>=-1&&v.z<=1&&x>0&&x<innerWidth&&y>0&&y<innerHeight;
    const shown=inViewport&&y>100&&y<innerHeight-125;
@@ -102,10 +101,14 @@ async function start(){
    n.label.hidden=!shown;
    n.anchor.setAttribute('cx',x);n.anchor.setAttribute('cy',y);
    if(!shown)continue;
-   const radiusPx=n.displayRadius/(-view.z)*innerHeight/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));let lx=Math.min(innerWidth-100,Math.max(innerWidth>700?185:8,x+Math.max(10,radiusPx+6))),ly=y-15;
-   const minY=innerWidth<700?165:105,maxY=innerHeight-(innerWidth<700?220:150);let found=false;
-   for(const side of [1,-1]){if(found)break;const candidateX=Math.min(innerWidth-100,Math.max(innerWidth>700?185:8,side===1?x+Math.max(10,radiusPx+6):x-110-radiusPx));for(let attempt=0;attempt<24;attempt++){const dy=attempt===0?0:Math.ceil(attempt/2)*30*(attempt%2?1:-1),candidateY=THREE.MathUtils.clamp(y-15+dy,minY,maxY);if(!placed.some(r=>candidateX<r.x+100&&candidateX+100>r.x&&candidateY<r.y+29&&candidateY+29>r.y)){lx=candidateX;ly=candidateY;found=true;break;}}}
-   placed.push({x:lx,y:ly});n.label.style.transform=`translate(${lx}px,${ly}px)`;n.line.setAttribute('x1',x);n.line.setAttribute('y1',y);n.line.setAttribute('x2',lx+10);n.line.setAttribute('y2',ly+15);
+   // Stable upper-right attachment. Overlap never changes a label's position.
+   const radiusPx=n.displayRadius/(-view.z)*innerHeight/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));
+   const width=n.label.offsetWidth||100,height=n.label.offsetHeight||30;
+   const minX=innerWidth>700?185:8,minY=innerWidth<700?165:105;
+   const maxX=Math.max(minX,innerWidth-width-8),maxY=Math.max(minY,innerHeight-(innerWidth<700?220:150));
+   // Continuous clamping at the viewport edge; never flip to the other side.
+   const lx=THREE.MathUtils.clamp(x+Math.max(10,radiusPx+6),minX,maxX),ly=THREE.MathUtils.clamp(y-height,minY,maxY);
+   n.label.style.transform=`translate(${lx}px,${ly}px)`;n.line.setAttribute('x1',x);n.line.setAttribute('y1',y);n.line.setAttribute('x2',lx+10);n.line.setAttribute('y2',ly+height/2);
   }
   const auPerPixel=2*dist*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/innerHeight;const raw=auPerPixel*80,power=10**Math.floor(Math.log10(raw));const step=[1,2,5,10].reduce((a,b)=>Math.abs(b*power-raw)<Math.abs(a*power-raw)?b:a,1)*power;$('#ruler i').style.width=(step/auPerPixel)+'px';$('#ruler span').textContent=(step<.001?(step*data.auKm).toLocaleString(undefined,{maximumSignificantDigits:3})+' km':step.toLocaleString(undefined,{maximumSignificantDigits:3})+' AU')+' at focus';
   renderer.render(scene,renderCamera);
