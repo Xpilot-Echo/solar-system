@@ -1,0 +1,103 @@
+{
+  "passed": true,
+  "epoch": "2026-09-27 00:00 TDB",
+  "unit": "1 scene unit = 1 AU = 149597870.7 km",
+  "pairCount": 45,
+  "orbitPairCount": 36,
+  "maxDiameterRatioRelativeError": 2.220446049250313e-16,
+  "maxOrbitRatioRelativeError": 2.220446049250313e-16,
+  "maxPositionErrorKm": 0.000008130056221751015,
+  "maxInclinationErrorDeg": 8.881784197001252e-16,
+  "checks": [
+    "All 45 body diameter ratios",
+    "All 36 orbital semi-major axis ratios",
+    "Perihelion and aphelion distances",
+    "Recovered a, e and inclination",
+    "Kepler-solved position versus independently requested Horizons geometric vector",
+    "True-scale radius at every tested depth",
+    "Visible mode changes radius only, leaving positions and elements unchanged"
+  ],
+  "bodies": [
+    {
+      "name": "Mercury",
+      "diameterKm": 4878.8,
+      "diameterSceneAU": 0.00003261276365212329,
+      "semiMajorAxisAU": 0.3870972512762296,
+      "eccentricity": 0.2056391114598978,
+      "inclinationDeg": 7.003375986797093,
+      "positionErrorKm": 9.414204163517978e-9
+    },
+    {
+      "name": "Venus",
+      "diameterKm": 12103.6,
+      "diameterSceneAU": 0.00008090756869308837,
+      "semiMajorAxisAU": 0.72333847071275,
+      "eccentricity": 0.006764778057933502,
+      "inclinationDeg": 3.394337500777706,
+      "positionErrorKm": 5.2562337394542967e-8
+    },
+    {
+      "name": "Earth",
+      "diameterKm": 12742.0168,
+      "diameterSceneAU": 0.00008517512141300818,
+      "semiMajorAxisAU": 0.9990966502040832,
+      "eccentricity": 0.01676401323669623,
+      "inclinationDeg": 0.005166446869815823,
+      "positionErrorKm": 1.2063211814374858e-7
+    },
+    {
+      "name": "Mars",
+      "diameterKm": 6779,
+      "diameterSceneAU": 0.0000453148161018578,
+      "semiMajorAxisAU": 1.523660663096909,
+      "eccentricity": 0.0934180304667927,
+      "inclinationDeg": 1.84745536975392,
+      "positionErrorKm": 1.2328271907521104e-7
+    },
+    {
+      "name": "Jupiter",
+      "diameterKm": 139822,
+      "diameterSceneAU": 0.0009346523406098187,
+      "semiMajorAxisAU": 5.202262423599588,
+      "eccentricity": 0.04833566929840021,
+      "inclinationDeg": 1.303693651574584,
+      "positionErrorKm": 2.9741176325803033e-7
+    },
+    {
+      "name": "Saturn",
+      "diameterKm": 116464,
+      "diameterSceneAU": 0.0007785137546078723,
+      "semiMajorAxisAU": 9.537956346481847,
+      "eccentricity": 0.05528728535955524,
+      "inclinationDeg": 2.487539503321567,
+      "positionErrorKm": 3.3217400097207414e-8
+    },
+    {
+      "name": "Uranus",
+      "diameterKm": 50724,
+      "diameterSceneAU": 0.00033906899718994465,
+      "semiMajorAxisAU": 19.26512343357788,
+      "eccentricity": 0.04750554013284473,
+      "inclinationDeg": 0.7737305861550058,
+      "positionErrorKm": 0.0000011885378856041094
+    },
+    {
+      "name": "Neptune",
+      "diameterKm": 49244,
+      "diameterSceneAU": 0.00032917580824898734,
+      "semiMajorAxisAU": 30.069556686142,
+      "eccentricity": 0.009802370579184299,
+      "inclinationDeg": 1.774800989236646,
+      "positionErrorKm": 0.0000021261731013221764
+    },
+    {
+      "name": "Pluto",
+      "diameterKm": 2376.6,
+      "diameterSceneAU": 0.000015886589754783187,
+      "semiMajorAxisAU": 39.77318706856521,
+      "eccentricity": 0.2504553973241762,
+      "inclinationDeg": 17.18250010646457,
+      "positionErrorKm": 0.000008130056221751015
+    }
+  ]
+}
