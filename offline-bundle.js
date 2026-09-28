@@ -78990,7 +78990,6 @@ async function start(){
    for(const side of [1,-1]){if(found)break;const candidateX=Math.min(innerWidth-100,Math.max(innerWidth>700?185:8,side===1?x+Math.max(10,radiusPx+6):x-110-radiusPx));for(let attempt=0;attempt<24;attempt++){const dy=attempt===0?0:Math.ceil(attempt/2)*30*(attempt%2?1:-1),candidateY=THREE.MathUtils.clamp(y-15+dy,minY,maxY);if(!placed.some(r=>candidateX<r.x+100&&candidateX+100>r.x&&candidateY<r.y+29&&candidateY+29>r.y)){lx=candidateX;ly=candidateY;found=true;break;}}}
    placed.push({x:lx,y:ly});n.label.style.transform=`translate(${lx}px,${ly}px)`;n.line.setAttribute('x1',x);n.line.setAttribute('y1',y);n.line.setAttribute('x2',lx+10);n.line.setAttribute('y2',ly+15);
   }
-  if(selected)$('#magnification').textContent=visible&&selected.b.name!=='Sun'?`Display size ×${(selected.displayRadius/selected.radius).toLocaleString(undefined,{maximumFractionDigits:1})} · orbit unchanged`:'Physical diameter · 1:1 scale';
   const auPerPixel=2*dist*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/innerHeight;const raw=auPerPixel*80,power=10**Math.floor(Math.log10(raw));const step=[1,2,5,10].reduce((a,b)=>Math.abs(b*power-raw)<Math.abs(a*power-raw)?b:a,1)*power;$('#ruler i').style.width=(step/auPerPixel)+'px';$('#ruler span').textContent=(step<.001?(step*data.auKm).toLocaleString(undefined,{maximumSignificantDigits:3})+' km':step.toLocaleString(undefined,{maximumSignificantDigits:3})+' AU')+' at focus';
   renderer.render(scene,renderCamera);
  }
