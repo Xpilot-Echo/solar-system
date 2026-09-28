@@ -78985,6 +78985,13 @@ async function start(){
   for(const n of nodes)if(n.b.elements)n.pos.fromArray(positionAtDays(n.b.elements,elapsedDays));
   if(previous){const delta=selected.pos.clone().sub(previous);camera.position.add(delta);controls.target.add(delta);if(flight){flight.fromTarget.add(delta);flight.toTarget.add(delta);}}
  }
+ $('#today').onclick=()=>{
+  const today=new Date();
+  // Use the device's local calendar date in the simulation's date display.
+  elapsedDays=(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())-epochMs)/86400000;
+  lastTime=null;
+  moveBodies();
+ };
  document.addEventListener('visibilitychange',()=>{lastTime=null;});
  $('#speed').value=String(1000*Math.log(10)/Math.log(3650));
  setSpeed(1);syncPlayback();

@@ -12,7 +12,7 @@
 .time-controls{position:absolute;z-index:2;top:100px;right:36px;width:310px;padding:14px 16px;border:1px solid #303030;border-radius:8px;background:#080808ed}
 .time-actions{display:flex;align-items:center;gap:12px;font-size:12px}
 .time-actions button{padding:7px 9px;border-radius:4px;background:#222;white-space:nowrap}
-.time-actions #playback{background:#e6e4de;color:#171717;min-width:53px}
+.time-actions #playback,.time-actions #today{background:#e6e4de;color:#171717;min-width:53px}
 .time-actions label{margin-left:auto;color:#888;font-size:10px}
 #speed-value{display:block;margin-top:4px;color:#e7c28d;font:12px monospace;white-space:nowrap}
 #speed{width:100%;height:16px;margin:16px 0 10px;appearance:none;-webkit-appearance:none;background:transparent;accent-color:#e7c28d;cursor:pointer}
@@ -28,7 +28,7 @@
 <main id="universe" aria-label="Interactive three-dimensional Solar System"><div id="loading" role="status">Loading the Solar System…</div></main>
 <header><div class="identity"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="3" fill="#e7c28d"/><ellipse cx="15" cy="15" rx="14" ry="7" fill="none" stroke="#777" transform="rotate(-35 15 15)"/></svg><div><h1>Solar System</h1><p id="simulation-date">27 SEP 2026 · 00:00 TDB</p></div></div><div class="modes" role="group" aria-label="Planet size mode"><button id="true" aria-pressed="true">TRUE SCALE</button><button id="visible" aria-pressed="false">VISIBLE PLANETS</button></div></header>
 <section class="time-controls" aria-label="Orbital animation">
-<div class="time-actions"><button id="playback" aria-label="Pause orbital animation">Pause</button><label for="speed">Speed <output id="speed-value" for="speed">1 s = 1 day</output></label></div>
+<div class="time-actions"><button id="playback" aria-label="Pause orbital animation">Pause</button><button id="today" title="Return to today's date" aria-label="Return to today">Today</button><label for="speed">Speed <output id="speed-value" for="speed">1 s = 1 day</output></label></div>
 <input id="speed" type="range" min="0" max="1000" step="1" value="281" aria-label="Simulation speed" aria-valuetext="1 s = 1 day">
 <div class="speed-limits" aria-hidden="true"><span>Slow · 0.1 day / s</span><span>Fast · 365 days / s</span></div>
 </section>
@@ -79025,6 +79025,13 @@ async function start(){
   for(const n of nodes)if(n.b.elements)n.pos.fromArray(positionAtDays(n.b.elements,elapsedDays));
   if(previous){const delta=selected.pos.clone().sub(previous);camera.position.add(delta);controls.target.add(delta);if(flight){flight.fromTarget.add(delta);flight.toTarget.add(delta);}}
  }
+ $('#today').onclick=()=>{
+  const today=new Date();
+  // Use the device's local calendar date in the simulation's date display.
+  elapsedDays=(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())-epochMs)/86400000;
+  lastTime=null;
+  moveBodies();
+ };
  document.addEventListener('visibilitychange',()=>{lastTime=null;});
  $('#speed').value=String(1000*Math.log(10)/Math.log(3650));
  setSpeed(1);syncPlayback();

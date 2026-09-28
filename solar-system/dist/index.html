@@ -2,7 +2,7 @@
 <main id="universe" aria-label="Interactive three-dimensional Solar System"><div id="loading" role="status">Loading the Solar System…</div></main>
 <header><div class="identity"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="3" fill="#e7c28d"/><ellipse cx="15" cy="15" rx="14" ry="7" fill="none" stroke="#777" transform="rotate(-35 15 15)"/></svg><div><h1>Solar System</h1><p id="simulation-date">27 SEP 2026 · 00:00 TDB</p></div></div><div class="modes" role="group" aria-label="Planet size mode"><button id="true" aria-pressed="true">TRUE SCALE</button><button id="visible" aria-pressed="false">VISIBLE PLANETS</button></div></header>
 <section class="time-controls" aria-label="Orbital animation">
-<div class="time-actions"><button id="playback" aria-label="Pause orbital animation">Pause</button><label for="speed">Speed <output id="speed-value" for="speed">1 s = 1 day</output></label></div>
+<div class="time-actions"><button id="playback" aria-label="Pause orbital animation">Pause</button><button id="today" title="Return to today's date" aria-label="Return to today">Today</button><label for="speed">Speed <output id="speed-value" for="speed">1 s = 1 day</output></label></div>
 <input id="speed" type="range" min="0" max="1000" step="1" value="281" aria-label="Simulation speed" aria-valuetext="1 s = 1 day">
 <div class="speed-limits" aria-hidden="true"><span>Slow · 0.1 day / s</span><span>Fast · 365 days / s</span></div>
 </section>

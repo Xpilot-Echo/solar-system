@@ -108,6 +108,18 @@ const beforeHidden=context.solarAudit().elapsedDays;
 document.hidden=true;listeners.visibilitychange();tick(100);
 document.hidden=false;listeners.visibilitychange();near(tick(100).elapsedDays,beforeHidden);
 near(tick(1).elapsedDays,beforeHidden+365);
+// Today works during playback and while paused, preserving speed and tracking.
+const today=new Date();
+const todayDays=(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())-Date.UTC(2026,8,27))/86400000;
+get('#today').onclick();state=tick(0);
+near(state.elapsedDays,todayDays);assert.equal(state.playing,true);near(state.daysPerSecond,365);
+vectorNear(state.cameraTarget,earth().position);
+near(tick(1).elapsedDays,todayDays+365);
+get('#playback').onclick();
+get('#today').onclick();state=tick(0);
+near(state.elapsedDays,todayDays);assert.equal(state.playing,false);
+near(tick(2).elapsedDays,todayDays);
+vectorNear(state.cameraTarget,earth().position);
 get('#overview').onclick();state=tick(2);
 assert.equal(state.selected,null);vectorNear(state.cameraTarget,[0,0,0]);
 assert.ok(!script.includes('#time-reset')&&!script.includes('[data-speed]'));
