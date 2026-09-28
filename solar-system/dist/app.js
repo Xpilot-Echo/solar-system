@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
-import {positionAtE,physicalRadius,scenePosition,displayRadius} from './math.mjs';
+import {positionAtE,positionAtDays,physicalRadius,scenePosition,displayRadius} from './math.mjs';
 import {projectedDiameterPx,trueScalePresentation} from './true-scale.mjs';
 const $=s=>document.querySelector(s);
 try { await start(); } catch(error) { $('#loading').hidden=false; $('#loading').textContent='The 3D view could not load. Please enable WebGL and reload.'; console.error(error); }
@@ -11,7 +11,10 @@ async function start(){
  const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,1e-8,3000),renderCamera=camera.clone();
  const renderer=new THREE.WebGLRenderer({antialias:true,logarithmicDepthBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.setClearColor(0x000000);$('#universe').appendChild(renderer.domElement);renderer.domElement.setAttribute('aria-label','Solar System. Drag to orbit, scroll or pinch to zoom. Use the planet list to focus.');renderer.domElement.tabIndex=0;
  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.085;controls.minDistance=1e-7;controls.maxDistance=800;controls.zoomSpeed=.8;controls.enablePan=true;
- let visible=false,selected=null,flight=null,lastTime=0;
+ let visible=false,selected=null,flight=null,lastTime=null;
+ let elapsedDays=0,daysPerSecond=1,playing=true,lastReadout='';
+ const epochMs=Date.UTC(2026,8,27);
+ const dateFormat=new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'});
  document.body.classList.add('true-scale');
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  const home=()=>new THREE.Vector3(4,62,79).multiplyScalar(Math.max(1,1.7/camera.aspect));camera.position.copy(home());controls.update();
@@ -32,21 +35,43 @@ async function start(){
  function animateCamera(target,distance){controls.update();flight={start:performance.now(),fromTarget:controls.target.clone(),toTarget:target.clone(),fromDistance:camera.position.distanceTo(controls.target),toDistance:distance,direction:camera.position.clone().sub(controls.target).normalize()};}
  function focus(n){selected=n;nodes.forEach(x=>{x.nav.classList.toggle('active',x===n);x.label.classList.toggle('selected',x===n)});$('#overview').classList.remove('active');$('#details').hidden=false;$('#kind').textContent=n.b.name==='Sun'?'OUR STAR':n.b.name==='Pluto'?'DWARF PLANET':'PLANET';$('#body-name').textContent=n.b.name;
   const e=n.b.elements;const rows=[['Mean diameter',Math.round(n.b.radiusKm*2).toLocaleString()+' km']];if(e)rows.push(['Distance to Sun',n.pos.length().toFixed(5)+' AU'],['Semi-major axis',e.a.toFixed(6)+' AU'],['Eccentricity',e.e.toFixed(6)],['Inclination',e.i.toFixed(5)+'°']);
-  $('#body-data').innerHTML=rows.map(([a,b])=>`<div><dt>${a}</dt><dd>${b}</dd></div>`).join('');animateCamera(n.pos,n.radius*9);}
+  $('#body-data').innerHTML=rows.map(([a,b])=>`<div><dt>${a}</dt><dd${a==='Distance to Sun'?' id="sun-distance"':''}>${b}</dd></div>`).join('');animateCamera(n.pos,n.radius*9);}
  function reset(){selected=null;$('#details').hidden=true;nodes.forEach(x=>{x.nav.classList.remove('active');x.label.classList.remove('selected')});$('#overview').classList.add('active');controls.update();const h=home();flight={start:performance.now(),fromTarget:controls.target.clone(),toTarget:new THREE.Vector3(),fromDistance:camera.position.distanceTo(controls.target),toDistance:h.length(),direction:camera.position.clone().sub(controls.target).normalize(),toDirection:h.normalize()};}
  function setMode(v){if(visible!==v)nodes.forEach(n=>n.trueSphereVisible=null);visible=v;document.body.classList.toggle('true-scale',!v);$('#true').setAttribute('aria-pressed',String(!v));$('#visible').setAttribute('aria-pressed',String(v));$('#scale-title').textContent=v?'Larger bodies. Identical orbits.':'One scale. Every distance.';$('#mode-note').textContent=v?'Planets enlarged to at least 7 px radius. Distances stay true.':'Actual-size spheres; centered hollow markers below 2 px.';}
  $('#true').onclick=()=>setMode(false);$('#visible').onclick=()=>setMode(true);$('#overview').onclick=$('#reset').onclick=reset;
  const zoom=f=>animateCamera(controls.target,THREE.MathUtils.clamp(camera.position.distanceTo(controls.target)*f,controls.minDistance,controls.maxDistance));$('#zoom-in').onclick=()=>zoom(.5);$('#zoom-out').onclick=()=>zoom(2);
  controls.addEventListener('start',()=>{flight=null});
- window.addEventListener('keydown',e=>{if($('#data-dialog').open)return;if(e.key.toLowerCase()==='r')reset();if(e.key==='+'||e.key==='='){e.preventDefault();zoom(.5)}if(e.key==='-'){e.preventDefault();zoom(2)}});
+ function syncPlayback(){ $('#playback').textContent=playing?'Pause':'Play';$('#playback').setAttribute('aria-label',playing?'Pause orbital animation':'Play orbital animation'); }
+ function setSpeed(value){
+  daysPerSecond=Number(Math.min(365,Math.max(.1,value)).toPrecision(3));
+  const text=`1 s = ${daysPerSecond} ${daysPerSecond===1?'day':'days'}`;
+  $('#speed-value').textContent=text;
+  $('#speed').setAttribute('aria-valuetext',text);
+ }
+ $('#playback').onclick=()=>{playing=!playing;syncPlayback();};
+ // Logarithmic slider: equal travel multiplies speed, giving slow speeds room.
+ $('#speed').oninput=e=>setSpeed(.1*Math.pow(3650,Number(e.target.value)/1000));
+ function moveBodies(){
+  const previous=selected?.pos.clone();
+  for(const n of nodes)if(n.b.elements)n.pos.fromArray(positionAtDays(n.b.elements,elapsedDays));
+  if(previous){const delta=selected.pos.clone().sub(previous);camera.position.add(delta);controls.target.add(delta);if(flight){flight.fromTarget.add(delta);flight.toTarget.add(delta);}}
+ }
+ document.addEventListener('visibilitychange',()=>{lastTime=null;});
+ $('#speed').value=String(1000*Math.log(10)/Math.log(3650));
+ setSpeed(1);syncPlayback();
+ window.addEventListener('keydown',e=>{if($('#data-dialog').open||e.target.matches('input,select,textarea'))return;if(e.key.toLowerCase()==='r')reset();if(e.key==='+'||e.key==='='){e.preventDefault();zoom(.5)}if(e.key==='-'){e.preventDefault();zoom(2)}});
  $('#sources').onclick=()=>$('#data-dialog').showModal();$('#close-dialog').onclick=()=>$('#data-dialog').close();$('#data-dialog').addEventListener('click',e=>{if(e.target===$('#data-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
  const earth=data.bodies.find(b=>b.name==='Earth');$('#verification-rows').innerHTML=bodies.map(b=>`<tr><td>${b.name}</td><td>${(b.radiusKm/earth.radiusKm).toFixed(6)}</td><td>${b.elements?(b.elements.a/earth.elements.a).toFixed(6):'—'}</td><td>${b.elements?b.elements.a.toFixed(6):'—'}</td><td>${b.elements?b.elements.e.toFixed(6):'—'}</td><td>${b.elements?b.elements.i.toFixed(6):'—'}</td></tr>`).join('');$('#verification-status').textContent=audit.passed?'Numerical verification · passed':'Numerical verification · attention';$('#verification-summary').textContent=`${audit.pairCount} pairwise diameter ratios and ${audit.orbitPairCount} pairwise semi-major-axis ratios verified. Element-derived positions agree with independent Horizons vectors within ${audit.maxPositionErrorKm.toExponential(2)} km. Both modes retain identical body centers and orbit vertices.`;
  let down=null;renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY]});renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const p=new THREE.Vector2(e.clientX/innerWidth*2-1,-e.clientY/innerHeight*2+1),ray=new THREE.Raycaster();ray.setFromCamera(p,renderCamera);const hits=ray.intersectObjects(nodes.filter(n=>n.mesh.visible).map(n=>n.mesh));if(hits.length)focus(nodes.find(n=>n.mesh===hits[0].object));down=null;});
  window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
  const v=new THREE.Vector3(),view=new THREE.Vector3();const placed=[];
- function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-lastTime)/1000,.05);lastTime=now;
+ function frame(now){requestAnimationFrame(frame);const dt=lastTime===null||document.hidden?0:Math.max(0,(now-lastTime)/1000);lastTime=now;
+  if(playing){elapsedDays+=dt*daysPerSecond;moveBodies();}
+  const date=new Date(epochMs+elapsedDays*86400000),readout=dateFormat.format(date).toUpperCase()+' · '+date.toISOString().slice(11,16)+' TDB';
+  if(readout!==lastReadout){$('#simulation-date').textContent=readout;lastReadout=readout;}
+  if(selected?.b.elements)$('#sun-distance').textContent=selected.pos.length().toFixed(5)+' AU';
   if(flight){const t=reduced?1:Math.min((now-flight.start)/1600,1),s=t*t*(3-2*t);controls.target.lerpVectors(flight.fromTarget,flight.toTarget,s);const dist=Math.exp(THREE.MathUtils.lerp(Math.log(flight.fromDistance),Math.log(flight.toDistance),s));const dir=flight.toDirection?flight.direction.clone().lerp(flight.toDirection,s).normalize():flight.direction;camera.position.copy(controls.target).addScaledVector(dir,dist);if(t===1)flight=null;}
-  controls.update(dt);const dist=camera.position.distanceTo(controls.target);camera.near=Math.max(1e-10,dist*1e-5);camera.far=Math.max(2000,dist*10);camera.updateProjectionMatrix();camera.updateMatrixWorld();
+  controls.update(Math.min(dt,.05));const dist=camera.position.distanceTo(controls.target);camera.near=Math.max(1e-10,dist*1e-5);camera.far=Math.max(2000,dist*10);camera.updateProjectionMatrix();camera.updateMatrixWorld();
   // Floating origin: all physical centers remain double precision in AU;
   // subtract the camera target before converting positions to GPU floats.
   renderCamera.copy(camera);renderCamera.position.sub(controls.target);renderCamera.updateMatrixWorld();orbitGroup.position.copy(controls.target).negate();
@@ -78,5 +103,5 @@ async function start(){
   renderer.render(scene,renderCamera);
  }
  $('#loading').hidden=true;requestAnimationFrame(frame);
- window.solarAudit=()=>({mode:visible?'visible':'true',selected:selected?.b.name||null,epoch:data.epoch,renderer:renderer.info.render,centers:nodes.map(n=>({name:n.b.name,position:n.pos.toArray(),radius:n.radius,displayRadius:n.mesh.scale.x,sphereVisible:n.mesh.visible,markerVisible:n.anchor.style.display!=='none',projectedDiameter:n.projectedDiameter})),orbits:orbitGroup.children.map(l=>({count:l.geometry.attributes.position.count,first:Array.from(l.geometry.attributes.position.array.slice(0,3))})),cameraDistance:camera.position.distanceTo(controls.target),passed:audit.passed});
+ window.solarAudit=()=>({mode:visible?'visible':'true',elapsedDays,daysPerSecond,playing,selected:selected?.b.name||null,epoch:data.epoch,renderer:renderer.info.render,centers:nodes.map(n=>({name:n.b.name,position:n.pos.toArray(),radius:n.radius,displayRadius:n.mesh.scale.x,sphereVisible:n.mesh.visible,markerVisible:n.anchor.style.display!=='none',projectedDiameter:n.projectedDiameter})),orbits:orbitGroup.children.map(l=>({count:l.geometry.attributes.position.count,first:Array.from(l.geometry.attributes.position.array.slice(0,3))})),cameraTarget:controls.target.toArray(),cameraPosition:camera.position.toArray(),cameraDistance:camera.position.distanceTo(controls.target),passed:audit.passed});
 }

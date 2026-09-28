@@ -8,7 +8,7 @@ One world unit = one AU = exactly 149,597,870.7 km. Planet meshes are volume-equ
 
 Positions and osculating elements are NASA/JPL Horizons body-center, Sun-centered, geometric states at 2026-09-27 00:00 TDB, J2000 ecliptic/ICRF orientation. Queries use CENTER='500@10', REF_PLANE='ECLIPTIC', REF_SYSTEM='ICRF', OUT_UNITS='AU-D', VEC_CORR='NONE'. Raw independent ELEMENTS and VECTORS responses are retained in `data/`. IDs 199,299,399,499,599,699,799,899,999 refer to body centers, not planetary system barycenters.
 
-Paths are 4096-segment osculating ellipses at the specified epoch, not future trajectories. Bodies remain fixed at the dated snapshot. Shape/rotation details, rings and moons are outside this model.
+Paths are 4096-segment osculating ellipses at the specified epoch, not future trajectories. Bodies animate from the dated snapshot along fixed ellipses, with one shared simulation clock and each body’s own mean motion. This is a two-body approximation, not a precision ephemeris for subsequent dates. Shape/rotation details, rings and moons are outside this model.
 
 TRUE SCALE uses radiusKm/AU_KM. VISIBLE PLANETS imposes a seven-CSS-pixel minimum projected radius on planets including Pluto, with no modification to centers, orbital paths, element data, or the Sun. Enlargement fades naturally to physical size on approach. TRUE SCALE replaces spheres smaller than 2 CSS pixels in projected diameter with exactly one centered hollow marker. On zooming in, the sphere returns at 2.2 pixels (0.2 pixel hysteresis). Text labels have no dot or connector in TRUE SCALE. VISIBLE PLANETS retains its existing overlays.
 
@@ -26,6 +26,6 @@ Run `node verify.mjs`. This validates 45 diameter ratios, 36 semi-major-axis rat
 
 ## Controls
 
-Drag to orbit, scroll/pinch or +/- buttons to zoom, right-drag/two-finger gestures to pan, select a marker or body list entry to focus, R or reset to restore the overview. Source links and the numerical audit are in the data dialog.
+Drag to orbit, scroll/pinch or +/- buttons to zoom, right-drag/two-finger gestures to pan, select a marker or body list entry to focus, R or reset to restore the overview. Playback starts at 1 simulated day per second and time keeps moving forward without wrapping or reversing. Pause/Play stops or resumes time. A logarithmic slider adjusts speed from 0.1 to 365 days per second, with finer control at slow speeds and a live “1 s = X days” readout. Selecting a body tracks its moving center; All orbits releases tracking. Hidden tabs suspend simulation time. Source links and the numerical audit are in the data dialog.
 
 Three.js and OrbitControls are vendored under their MIT license in `dist/vendor/LICENSE`.

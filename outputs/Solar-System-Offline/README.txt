@@ -16,6 +16,9 @@ A Content Security Policy explicitly blocks network connections.
 CONTROLS
 Drag to orbit. Scroll or pinch to zoom. Two-finger touch pinch has 2x
 sensitivity. Select a body name or marker to focus. R resets the view.
+Playback starts at 1 simulated day per second and keeps moving forward.
+Pause/Play controls orbital motion. Drag the speed slider from 0.1 to 365
+days per second; its logarithmic scale gives finer control at slow speeds.
 TRUE SCALE shows physical spheres or centered hollow markers with the
 2–2.2 CSS pixel hysteresis. VISIBLE PLANETS retains enlarged planet display.
 Labels retain the requested 35% smaller type.
@@ -23,7 +26,7 @@ Labels retain the requested 35% smaller type.
 DATA AND SOURCES (offline references)
 NASA / Jet Propulsion Laboratory, Solar System Dynamics, Horizons System.
 Body-center geometric positions and osculating elements, Sun-centered,
-J2000 ecliptic, 2026-09-27 00:00 TDB. This is a fixed snapshot, not live data.
+J2000 ecliptic, 2026-09-27 00:00 TDB. Animation follows fixed Keplerian ellipses from this epoch, not live ephemerides.
 NASA / JPL, Planetary Physical Parameters: volume-equivalent mean radii.
 IAU 2012 Resolution B1: astronomical unit = 149,597,870.7 km.
 IAU 2015 Resolution B3: nominal solar radius = 695,700 km.

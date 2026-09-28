@@ -1,6 +1,7 @@
 from pathlib import Path
 import re,json,base64,shutil,zipfile
-src=Path('work/solar-system/dist');out=Path('outputs/Solar-System-Offline');out.mkdir(exist_ok=True)
+root=Path(__file__).resolve().parent
+src=root/'solar-system/dist';out=root/'outputs/Solar-System-Offline';out.mkdir(parents=True,exist_ok=True)
 def read(p):return (src/p).read_text()
 def mappings(spec,for_import=False):
  entries=[]
@@ -33,7 +34,7 @@ script='/* Bundled Three.js r180 and OrbitControls. MIT license included in this
 # Retain XML namespace identifiers, which are identifiers, never requests.
 # Strip vendor documentation/diagnostic URLs from this offline distribution.
 script=re.sub(r'https?://[^\s\'"`<>\\)\]}]+',lambda m:m[0] if m[0] in ['http://www.w3.org/1999/xhtml','http://www.w3.org/2000/svg'] else '[offline-reference]',script)
-Path('work/offline-bundle.js').write_text(script)
+(root/'offline-bundle.js').write_text(script)
 html=read('index.html')
 html=re.sub(r'<script type="importmap">.*?</script>','',html)
 html=html.replace('<link rel="stylesheet" href="./style.css">','<style>'+read('style.css')+'</style>')
@@ -63,6 +64,9 @@ A Content Security Policy explicitly blocks network connections.
 CONTROLS
 Drag to orbit. Scroll or pinch to zoom. Two-finger touch pinch has 2x
 sensitivity. Select a body name or marker to focus. R resets the view.
+Playback starts at 1 simulated day per second and keeps moving forward.
+Pause/Play controls orbital motion. Drag the speed slider from 0.1 to 365
+days per second; its logarithmic scale gives finer control at slow speeds.
 TRUE SCALE shows physical spheres or centered hollow markers with the
 2–2.2 CSS pixel hysteresis. VISIBLE PLANETS retains enlarged planet display.
 Labels retain the requested 35% smaller type.
@@ -70,7 +74,7 @@ Labels retain the requested 35% smaller type.
 DATA AND SOURCES (offline references)
 NASA / Jet Propulsion Laboratory, Solar System Dynamics, Horizons System.
 Body-center geometric positions and osculating elements, Sun-centered,
-J2000 ecliptic, 2026-09-27 00:00 TDB. This is a fixed snapshot, not live data.
+J2000 ecliptic, 2026-09-27 00:00 TDB. Animation follows fixed Keplerian ellipses from this epoch, not live ephemerides.
 NASA / JPL, Planetary Physical Parameters: volume-equivalent mean radii.
 IAU 2012 Resolution B1: astronomical unit = 149,597,870.7 km.
 IAU 2015 Resolution B3: nominal solar radius = 695,700 km.
@@ -86,7 +90,7 @@ THREE-LICENSE.txt. The touch pinch exponent is locally adjusted to 2x.
 
 Sharing: send this ZIP. Recipients extract it and open index.html.
 ''')
-archive=Path('outputs/Solar-System-Offline.zip')
+archive=root/'outputs/Solar-System-Offline.zip'
 with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
  for file in sorted(out.iterdir()):z.write(file,'Solar-System-Offline/'+file.name)
 print(json.dumps({'archive':str(archive.resolve()),'bytes':archive.stat().st_size,'htmlBytes':(out/'index.html').stat().st_size,'files':[p.name for p in sorted(out.iterdir())]}))

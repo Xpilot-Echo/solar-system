@@ -12,7 +12,7 @@ camera.position.set(4,62,79);
 const controls=new OrbitControls(camera,null);controls.zoomSpeed=.8;controls.update();
 assert.ok(Number.isFinite(camera.position.length()));
 const scene=new THREE.Scene();const sphere=new THREE.Mesh(new THREE.SphereGeometry(1,64,32),new THREE.MeshStandardMaterial());scene.add(sphere);
-const data=JSON.parse(fs.readFileSync(new URL('../outputs/Solar-System-Offline/data.json',import.meta.url)));
+const data=JSON.parse(fs.readFileSync(new URL('./outputs/Solar-System-Offline/data.json',import.meta.url)));
 const original=JSON.parse(fs.readFileSync(new URL('./solar-system/dist/data.json',import.meta.url)));
 assert.deepEqual(data,original);
 const app=bundle.slice(bundle.indexOf('const $=s=>'));

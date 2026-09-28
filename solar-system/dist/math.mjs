@@ -9,6 +9,11 @@ export function positionAtE(el,E) {
  return [X,Z,-Y]; // right-handed rotation of J2000 ecliptic axes; no scaling
 }
 export function solveE(M,e) { let E=radians(M); for(let j=0;j<20;j++){const d=(E-e*Math.sin(E)-radians(M))/(1-e*Math.cos(E)); E-=d;if(Math.abs(d)<1e-15)break;}return E; }
+// Fixed-ellipse propagation from the dataset epoch; time in days.
+export function positionAtDays(el,days) {
+ const mean=((el.M+el.n*(days%el.period))%360+360)%360;
+ return positionAtE(el,solveE(mean,el.e));
+}
 export const scenePosition = p => [p[0],p[2],-p[1]];
 export const physicalRadius = b => b.radiusKm/AU_KM;
 export function displayRadius(real,depth,height,fov,visible) { return visible ? Math.max(real,7*2*Math.max(0,depth)*Math.tan(radians(fov/2))/height) : real; }
