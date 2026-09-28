@@ -25,9 +25,9 @@ for(const b of data.bodies){
 const elements=new Map();
 function element(){
  return {style:{setProperty(){}},classList:{add(){},remove(){},toggle(){}},dataset:{},attributes:{},
-  hidden:false,open:false,children:[],textContent:'',innerHTML:'',
+  hidden:false,open:false,children:[],textContent:'',innerHTML:'',events:{},
   appendChild(x){this.children.push(x);},setAttribute(k,v){this.attributes[k]=v;},
-  addEventListener(){},matches(){return false;},showModal(){this.open=true;},close(){this.open=false;}};
+  addEventListener(type,handler,options){this.events[type]={handler,options};},matches(){return false;},showModal(){this.open=true;},close(){this.open=false;}};
 }
 const get=s=>{if(!elements.has(s))elements.set(s,element());return elements.get(s);};
 const listeners={};
@@ -50,6 +50,18 @@ const script=fs.readFileSync(new URL('../offline-bundle.js',import.meta.url),'ut
  })()`);
 await vm.runInNewContext(script,context);
 assert.equal(typeof context.solarAudit,'function');
+for(const selector of ['#labels','#leaders','#bodies','#details','.time-controls']){
+ const overlay=get(selector);
+ for(const type of ['wheel','gesturestart','gesturechange']){
+  let prevented=false;
+  assert.equal(overlay.events[type].options.passive,false);
+  overlay.events[type].handler({ctrlKey:true,preventDefault(){prevented=true;}});
+  assert.equal(prevented,true);
+ }
+ let prevented=false;
+ overlay.events.wheel.handler({ctrlKey:false,preventDefault(){prevented=true;}});
+ assert.equal(prevented,false);
+}
 const tick=seconds=>{now+=seconds*1000;frame(now);return context.solarAudit();};
 let initial=tick(0);
 initial.centers.slice(1).forEach((n,i)=>vectorNear(n.position,scenePosition(data.bodies[i].position),1e-11));

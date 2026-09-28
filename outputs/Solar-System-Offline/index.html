@@ -78999,6 +78999,14 @@ async function start(){
  $('#true').onclick=()=>setMode(false);$('#visible').onclick=()=>setMode(true);$('#overview').onclick=$('#reset').onclick=reset;
  const zoom=f=>animateCamera(controls.target,THREE.MathUtils.clamp(camera.position.distanceTo(controls.target)*f,controls.minDistance,controls.maxDistance));$('#zoom-in').onclick=()=>zoom(.5);$('#zoom-out').onclick=()=>zoom(2);
  controls.addEventListener('start',()=>{flight=null});
+ // Overlay labels do not receive the canvas's wheel handler. Block browser
+ // pinch zoom here without changing ordinary scrolling or camera controls.
+ for(const selector of ['#labels','#leaders','#bodies','#details','.time-controls']){
+  const overlay=$(selector);
+  overlay.addEventListener('wheel',e=>{if(e.ctrlKey)e.preventDefault();},{passive:false});
+  for(const type of ['gesturestart','gesturechange'])
+   overlay.addEventListener(type,e=>e.preventDefault(),{passive:false});
+ }
  function syncPlayback(){ $('#playback').textContent=playing?'Pause':'Play';$('#playback').setAttribute('aria-label',playing?'Pause orbital animation':'Play orbital animation'); }
  function setSpeed(value){
   daysPerSecond=Number(Math.min(365,Math.max(.1,value)).toPrecision(3));
